@@ -6,31 +6,44 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 🔹 Get role from localStorage (set it after login)
-  const role = localStorage.getItem("role"); // "admin", "investigator", "analyst"
+  const role = localStorage.getItem("userRole");
 
-  // 🔹 Navigation links with allowed roles
-  const navLinks = [
-    { name: "Upload", path: "/upload"},
+  const allNavLinks = [
+    { name: "Upload", path: "/upload" },
     { name: "Verify", path: "/verify" },
     { name: "View", path: "/view" },
     { name: "Downloads", path: "/downloads" },
     { name: "Transfer", path: "/transfer" },
   ];
 
+  // 🔹 Filter links based on role
+  const filteredNavLinks = allNavLinks.filter((link) => {
+    if (role === "admin") {
+      return true; // admin sees all
+    }
+    if (role === "analyst") {
+      return link.name === "Downloads";
+    }
+    if (role === "investigator") {
+      // Investigator can access everything except "View"
+      return link.name !== "View";
+    }
+    return false; // no access by default
+  });
+
+  // 🔸 Logout handler
   const handleLogout = () => {
-    localStorage.removeItem("role"); // clear role on logout
+    localStorage.removeItem("role");
     navigate("/");
   };
 
-  // 🔹 Auto logout after 15 seconds
+  // ⏱ Auto logout after 200 seconds
   useEffect(() => {
     const timer = setTimeout(() => {
       handleLogout();
-    }, 200000); // 15000ms = 15 seconds
-
-    return () => clearTimeout(timer); // cleanup on unmount
-  }, []); // run once on mount
+    }, 200000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <nav className="w-full bg-[#59AEF4] text-white shadow-md px-6 py-3 flex items-center justify-between">
@@ -44,7 +57,7 @@ const Navbar = () => {
 
       {/* Nav Links */}
       <div className="flex space-x-3">
-        {navLinks.map((link) => (
+        {filteredNavLinks.map((link) => (
           <Button
             key={link.name}
             onClick={() => navigate(link.path)}
